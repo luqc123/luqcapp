@@ -1,0 +1,189 @@
+flask 增加的功能需要修改的文件：
+8f：修改密码功能
+1.用户登录状态的时候修改密码
+2.所需要修改的文件：
+
+1.登录状态的页面要有相应的链接被鼠标点击
+需要修改对应的模板文件.html 对应mvc的 m
+2.点击了链接之后所有执行的函数 对应mvc v
+3.需要增加新的表单，修改密码的表单，其中的数据库的操作要注意
+
+
+8g： 重设密码功能
+1.怎么进入重设密码？ 需要修改模板 对应的mvc里边的m
+2.进入后怎么修改，发送电子邮件修改 对应mvc的 v
+3.需要增加表单吗？？
+
+8h
+修改点和重设密码工程差不多
+
+9a
+用户角色
+
+10a
+添加用户的资料信息
+需要增加的是用户表里边的字段，对应models.py
+对应的处理函数和魔板 c m 
+还需要增加一些表格，auth/form.py
+
+初始化数据库
+1.python manage.py db init
+2.python manage.py db migrate -m "initial migration"
+3.python manage.py db upgrade
+
+10b
+资料编辑器
+需要添加的：先是form 然后是views 然后是html
+m c v
+
+10c 用户头像添加
+原理：邮件和头像对应起来
+
+10d
+将邮件对应的md5的值缓存起来放在数据库里边
+
+11a
+博客文章
+需要新建立一个表，Post和User是多对一的关系
+views里边的函数同时含有redirect和render_template的时候执行关系是怎么样的？
+
+11b
+模板继承
+
+
+11c
+虚拟博客列表
+生成虚拟文章的命令：
+>>> User.generate_fake(100)
+>>> Post.generate_fake(100)
+为什么文本框出不来呢？？
+原因是在注册用户的时候Role里边没有值
+所以can返回Flase
+    {% if current_user.can(Permission.WRITE_ARTICLES) %}
+    {{ wtf.quick_form(form) }}
+    {% endif %}
+这里边的if返回False
+表单没有得到渲染
+解决办法：
+注册之前先Role.insert_roles()
+然后再注册和生成虚拟的数据
+
+因为Role里边是空的没有执行Role.insert_roles()
+能否把插入roles的操作放在一个固定的位置呢？？
+像是在before_request之类的函数里边?
+
+11d 添加分页导航
+html标签
+ul表示无序列表，此项目使用粗体圆点标记
+无序表始于<ul>标签，每个列表项始于<li>
+ol表示有序列表，列表项目使用数字进行标记
+列表有不同的类型：
+使用<ul type="disc"> 使用type来定义这个。	
+1.pagination 和 查所有的区别
+pagination = Post.query.order_by(Post.timestamp.desc()).paginate(1)
+
+2.url_for()的执行顺序
+定义到一个网页，制定了特定的参数，最后还是回到render_template里边。
+
+11e
+富文本文章支持
+{% block scripts %}
+{{ super() }}
+{{ pagedown.include_pagedown() }}
+{% endblock %}
+模板里边的super是怎么实现的？
+富文本怎么转换的，如何在数据库里边表示的。
+1.怎么样的提交表单才是安全的，
+2.转换在哪个地方才算是安全，
+
+11fgh
+1.css控制div的各个标签的用法
+2.参数的传递是由哪里提供，views函数的执行的流程:
+是否需要用户登录
+是否需要对用户的身份有限制
+通过点击相应的页面上的href来启动view函数：
+
+12a.多对多的关系
+relationship的相关参数的意思：
+secondary:
+for a many-to-many relationship, specifies the intermediary table, and is typically an instance of Table.
+cascade
+
+
+12b
+显示关注和粉丝
+1.关注和粉丝之间的数据关系，更改model
+2.在用户主页上显示出显示和关注的按钮 改动html
+3.按钮所对应的操作，对应要改动view
+难点：
+user.follows 是一条记录还是一个迭代器？？
+
+12c
+联结操作数据表
+return db.session.query(Post).select_from(Follow).\
+filter_by(follower_id=self.id).\
+join(Post, Follow.followed_id == Post.author_id)
+
+return Post.query.join(Follow, Follow.followed_id == Post.author_id)\
+.filter(Follow.follower_id == self.id)
+这两者返回的东西有什么不同，返回的记录还是数据表
+
+12d
+如何设置是显示所有文章还是关注用户的文章？
+cookie只能在响应对象中设置，因此这两个路由不能依赖Flask，要使用make_response()
+方法创建响应对象？？？
+
+12e
+创建静态函数来更新现有的数据库
+需要执行
+ User.add_self_follows()
+ 
+13a
+出现
+Method Not Allowed
+
+The method is not allowed for the requested URL.
+报错的时候
+可能是route方法没有添加POST属性了。
+
+13b
+比如页面上需要增加一个更改评论的按钮，这个只是一个get操作，
+显示一个渲染的页面，使用url_for('main.moderate')来显示一个
+指定的页面
+如果是post操作，需要传入的参数就多了，
+使用url_for()就相当于把view视图函数最后render_template里边传入的
+参数已经指定了，而不需要视图函数的前面那一部分生成参数的步骤了。
+
+BuildError: Could not build url for endpoint 'main.moderate_disable' 
+with values ['id', 'page']. Did you mean 'main.moderate_disabled' instead?
+一般出现这种错误的时候可能是url_for()函数忘记加引号了 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
